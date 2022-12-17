@@ -23,24 +23,18 @@ class account
 	char name[50];
 	int deposit;
 	char type;
-	float saving;
 public:
 	void create_account();	//function to get data from user
 	void show_account() const;	//function to show data on screen
 	void modify();	//function to add new data
+	void merge(account ac); //function to merge a secont account with the current one
 	void dep(int);	//function to accept amount and add to balance amount
 	void draw(int);	//function to accept amount and subtract from balance amount
 	void report() const;	//function to show data in tabular format
 	int retacno() const;	//function to return account number
 	int retdeposit() const;	//function to return balance amount
 	char rettype() const;	//function to return type of account
-	void savings();  //This function will give the user an option to put into his existing bank account
-	int retursaving() const;
-
-
-};    //class ends here
-
-
+};         //class ends here
 
 
 void account::create_account()
@@ -55,8 +49,6 @@ void account::create_account()
 	type = toupper(type);
 	cout << "\nEnter The Initial amount(>=500 for Saving and >=1000 for current ) : ";
 	cin >> deposit;
-	cout << "\nEnter The Savings :";
-	cin >> saving;
 	cout << "\n\n\nAccount Created..";
 }
 
@@ -68,8 +60,6 @@ void account::show_account() const
 	cout << name;
 	cout << "\nType of Account : " << type;
 	cout << "\nBalance amount : " << deposit;
-	cout << "\nSavings account : " << saving;
-
 }
 
 
@@ -84,10 +74,20 @@ void account::modify()
 	type = toupper(type);
 	cout << "\nModify Balance amount : ";
 	cin >> deposit;
-	cout << "\nSavings account : ";
-	cin >> saving;
 }
 
+void account::merge(account ac)
+{
+	cout << "\nEnter A New Account No. : ";
+	cin >> acno;
+	cout << "\nWrite The Account Holders Names : ";
+	cin.ignore();
+	cin.getline(name, 50);
+	cout << "\nModify Type of Account : ";
+	cin >> type;
+	type = toupper(type);
+	this->deposit += ac.deposit;
+}
 
 void account::dep(int x)
 {
@@ -101,7 +101,7 @@ void account::draw(int x)
 
 void account::report() const
 {
-	cout << acno << setw(10) << " " << name << setw(10) << " " << type << setw(6) << deposit << setw(6) << saving << endl;
+	cout << acno << setw(10) << " " << name << setw(10) << " " << type << setw(6) << deposit << endl;
 }
 
 int account::retacno() const
@@ -114,65 +114,11 @@ int account::retdeposit() const
 	return deposit;
 }
 
-int account::retursaving() const
-{
-	return saving;
-}
-
 char account::rettype() const
 {
 	return type;
 }
 
-void account::savings() {
-	cout << "\nDo you want to deposit or withdraw money from your savings? (d/w): ";
-	char choice;
-	cin >> choice;
-
-	// declare a variable to save the amount of money to be deposited or withdrawn
-	int amount;
-
-	// check if the user wants to deposit or withdraw money
-	if (choice == 'd') {
-		cout << "\nEnter the amount of money to deposit: ";
-		cin >> amount;
-		cout << "\nEnter from the account [a] or enter from another source [s] : (a/s) ";
-		cin >> choice;
-
-		// add the amount to the current savings
-		if (choice == 'a')
-		{
-			saving += amount;
-			deposit -= amount;
-		}
-		else if (choice == 's')
-		{
-			saving += amount;
-		}
-
-	}
-	else if (choice == 'w') {
-		cout << "\nEnter the amount of money to withdraw: ";
-		cin >> amount;
-		cout << "\nwithdraw or [w] withdraw and put into the account [a] : (w/a) ";
-		cin >> choice;
-		// subtract the amount from the current savings
-		if (choice == 'w')
-		{
-			saving -= amount;
-		}
-		else if (choice == 'a')
-		{
-			saving -= amount;
-			deposit += amount;
-		}
-	}
-
-	
-	ofstream outfile("savings.txt");
-	outfile << saving << endl;
-	outfile.close();
-}
 
 //***************************************************************
 //    	function declaration
@@ -180,12 +126,12 @@ void account::savings() {
 void write_account();	//function to write record in binary file
 void display_sp(int);	//function to display account details given by user
 void modify_account(int);	//function to modify record of file
+void merge_accounts(int, int); // function to merge 2 accounts
 void delete_account(int);	//function to delete record of file
 void display_all();		//function to display all account details
 void deposit_withdraw(int, int); // function to desposit/withdraw amount for given account
 void intro();	//introductory screen function
 void entry();
-int Access_to_savings(int); //A function that checks the account number and from there there will be an entry for a change within the savings account
 string getpassword(const string& prompt = "Enter password> ");
 
 
@@ -291,7 +237,7 @@ void login::addUser()
 int main()
 {
 	char ch;
-	int num;
+	int num, num2;
 	intro();
 	entry();
 	do
@@ -305,7 +251,7 @@ int main()
 		cout << "\n\n\t[05]. ALL ACCOUNT HOLDER LIST";
 		cout << "\n\n\t[06]. CLOSE AN ACCOUNT";
 		cout << "\n\n\t[07]. MODIFY AN ACCOUNT";
-		cout << "\n\n\t[08]. Savings account";
+		cout << "\n\n\t[08]. MERGE ACCOUNTS";
 		cout << "\n\n\t[09]. EXIT";
 		cout << "\n\n\tSelect Your Option (1-9) ";
 		cin >> ch;
@@ -316,34 +262,35 @@ int main()
 			write_account();
 			break;
 		case '2':
-			cout << "\n\n\tEnter The account No. : "; cin >> num;
+			cout << "\n\n\tEnter The account No.: "; cin >> num;
 			deposit_withdraw(num, 1);
 			break;
 		case '3':
-			cout << "\n\n\tEnter The account No. : "; cin >> num;
+			cout << "\n\n\tEnter The account No.: "; cin >> num;
 			deposit_withdraw(num, 2);
 			break;
 		case '4':
-			cout << "\n\n\tEnter The account No. : "; cin >> num;
+			cout << "\n\n\tEnter The account No.: "; cin >> num;
 			display_sp(num);
 			break;
 		case '5':
 			display_all();
 			break;
 		case '6':
-			cout << "\n\n\tEnter The account No. : "; cin >> num;
+			cout << "\n\n\tEnter The account No.: "; cin >> num;
 			delete_account(num);
 			break;
 		case '7':
-			cout << "\n\n\tEnter The account No. : "; cin >> num;
+			cout << "\n\n\tEnter The account No.: "; cin >> num;
 			modify_account(num);
 			break;
-
 		case '8':
-			cout << "\n\n\tEnter The account No. : "; cin >> num;
-			Access_to_savings(num);
+			cout << "\n\n\tEnter The first account's No.: "; cin >> num;
+			cout << "\n\n\tEnter The second account's No.: "; cin >> num2;
+			merge_accounts(num, num2);
+			delete_account(num);
+			delete_account(num2);
 			break;
-
 		case '9':
 			cout << "\n\n\tThanks for using bank record system";
 			break;
@@ -424,8 +371,8 @@ void modify_account(int n)
 			cout << "\n\nEnter The New Details of account" << endl;
 			ac.modify();
 			int pos = (-1) * static_cast<int>(sizeof(account));
-			File.seekp(pos, ios::cur);
-			File.write(reinterpret_cast<char*> (&ac), sizeof(account));
+			//File.seekp(pos, ios::cur);
+			//File.write(reinterpret_cast<char*> (&ac), sizeof(account));
 			cout << "\n\n\t Record Updated";
 			found = true;
 		}
@@ -433,6 +380,46 @@ void modify_account(int n)
 	File.close();
 	if (found == false)
 		cout << "\n\n Record Not Found ";
+}
+
+//***************************************************************
+//    	function to merge accounts
+//****************************************************************
+
+void merge_accounts(int n1, int n2)
+{
+	bool found = false;
+	account ac1, ac2;
+	fstream File;
+	File.open("account.dat", ios::binary | ios::in | ios::out);
+	while (!File.eof() && found == false)
+	{
+		if (ac1.retacno() != n1 && ac1.retacno() != n2)
+			File.read(reinterpret_cast<char*> (&ac1), sizeof(account));
+		if (ac2.retacno() != n1 && ac2.retacno() != n2)
+			File.read(reinterpret_cast<char*> (&ac2), sizeof(account));
+		if ((ac1.retacno() == n1 && ac2.retacno() == n2) || (ac1.retacno() == n2 && ac2.retacno() == n1))
+		{
+			ac1.show_account();
+			cout << endl;
+			ac2.show_account();
+			cout << "\n\nEnter The Details of the new shared account:" << endl;
+			ac1.merge(ac2);
+			int pos = (-1) * static_cast<int>(sizeof(account));
+			File.seekp(pos, ios::cur);
+			File.write(reinterpret_cast<char*> (&ac1), sizeof(account));
+			if (ac2.retacno() == n1)
+				delete_account(n1);
+			else
+				delete_account(n2);
+			ac1.show_account();
+			cout << "\n\n\t Accounts Merged";
+			found = true;
+		}
+	}
+	File.close();
+	if (found == false)
+		cout << "\n\n Records Not Found ";
 }
 
 //***************************************************************
@@ -482,9 +469,9 @@ void display_all()
 		return;
 	}
 	cout << "\n\n\t\tACCOUNT HOLDER LIST\n\n";
-	cout << "=============================================================================\n";
-	cout << "A/c no.      NAME           Type  Balance          Savings account\n";
-	cout << "=============================================================================\n";
+	cout << "====================================================\n";
+	cout << "A/c no.      NAME           Type  Balance\n";
+	cout << "====================================================\n";
 	while (inFile.read(reinterpret_cast<char*> (&ac), sizeof(account)))
 	{
 		ac.report();
@@ -542,42 +529,6 @@ void deposit_withdraw(int n, int option)
 	File.close();
 	if (found == false)
 		cout << "\n\n Record Not Found ";
-}
-
-
-int Access_to_savings(int n)
-{
-	bool found = false;
-	account ac;
-	fstream File;
-	File.open("account.dat", ios::binary | ios::in | ios::out);
-	if (!File)
-	{
-		cout << "File could not be open !! Press any Key...";
-		return 0;
-
-	}
-	while (!File.eof() && found == false)
-	{
-		File.read(reinterpret_cast<char*> (&ac), sizeof(account));
-		if (ac.retacno() == n)
-		{
-			ac.show_account();
-			ac.savings();
-			int pos = (-1) * static_cast<int>(sizeof(account));
-			File.seekp(pos, ios::cur);
-			File.write(reinterpret_cast<char*> (&ac), sizeof(account));
-			cout << "\n\n\t Record Updated";
-			found = true;
-		}
-	}
-	File.close();
-	if (found == false)
-	{
-		cout << "\n\n Record Not Found ";
-		return 0;
-	}
-	return 1;
 }
 
 
@@ -673,13 +624,6 @@ string getpassword(const string& prompt)
 
 	return result;
 }
-
-
-
-
-
-
-
 
 //***************************************************************
 //    			END OF PROJECT
