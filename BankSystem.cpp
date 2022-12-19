@@ -28,6 +28,7 @@ class account
 	int deposit;
 	char type;
 	float saving;
+	int discount;
 public:
 	void create_account();	//function to get data from user
 	void show_account() const;	//function to show data on screen
@@ -44,11 +45,14 @@ public:
 	void LoanCalculator();
 	void update();
 	bool isLoanPaid();
+	void setDiscuont(int);
+	int getdiscount() const;
 };    //class ends here
 
 void account::create_account()
 {
 	paid = 0;
+	int d; 
 	month = 0;
 	year = 0;
 	interest_rate = 0;
@@ -67,6 +71,9 @@ void account::create_account()
 	cin >> deposit;
 	cout << "\nEnter The Savings :";
 	cin >> saving;
+	cout << "\nEnter type of discuont:\n  1 - Soldier\n 2 - Student\n 3 - Veteran\n 4 - Newlywed\n 5 or defulty - Regular account\n";
+	cin >> d;
+	setDiscuont(d);
 	cout << "\n\n\nAccount Created..";
 }
 
@@ -113,13 +120,14 @@ void account::merge(account ac)
 
 void account::dep(int x)
 {
-	deposit += x;
+	deposit += x - discount;
 }
 
 void account::draw(int x)
 {
-	deposit -= x;
+	deposit -= x + discount;
 }
+
 
 void account::report() const
 {
@@ -145,6 +153,32 @@ char account::rettype() const
 {
 	return type;
 }
+
+void account::setDiscuont(int d)
+{
+	discount = 5;//Regular account
+	if (d == 1)//Soldier
+	{
+		discount = 1;
+	}
+	if (d == 2)//Student
+	{
+		discount = 2;
+	}
+	if (d == 3)//Veteran
+	{
+		discount = 3;
+	}
+	if (d == 4)//Newlywed
+	{
+		discount = 4;
+	}
+}
+int account::getdiscount() const
+{
+	return discount;
+}
+
 
 void account::savings() {
 	cout << "\nDo you want to deposit or withdraw money from your savings? (d/w): ";
@@ -274,6 +308,7 @@ void intro();	//introductory screen function
 void entry();
 int Access_to_savings(int); //A function that checks the account number and from there there will be an entry for a change within the savings account
 void LoanCalculator(int);
+void modify_discount(int);
 string getpassword(const string& prompt = "Enter password> ");
 
 
@@ -392,10 +427,10 @@ int main()
 		cout << "\n\n\t[05]. ALL ACCOUNT HOLDER LIST";
 		cout << "\n\n\t[06]. CLOSE AN ACCOUNT";
 		cout << "\n\n\t[07]. MODIFY AN ACCOUNT";
-		cout << "\n\n\t[08]. Savings account";
-		cout << "\n\n\t[09]. Merge accounts";
-		cout << "\n\n\t[10]. Take a Loan";
-		cout << "\n\n\t[11]. topaz";
+		cout << "\n\n\t[08]. SAVINGS ACCOUNT";
+		cout << "\n\n\t[09]. MERGE ACCOUNT";
+		cout << "\n\n\t[10]. TAKE A LOAN";
+		cout << "\n\n\t[11]. MODIFY AN DISCOUNT";
 		cout << "\n\n\t[12]. EXIT";
 		cout << "\n\n\tSelect Your Option (1-12) ";
 		cin >> menu;
@@ -443,6 +478,10 @@ int main()
 		case 10:
 			cout << "\n\n\tEnter The account No. : "; cin >> num;
 			LoanCalculator(num);
+			break;
+		case 11:
+			cout << "\n\n\tEnter The account No. : "; cin >> num;
+			modify_discount(num);
 			break;
 		case 12:
 			cout << "\n\n\tThanks for using bank record system";
@@ -556,7 +595,7 @@ void merge_accounts(int n1, int n2)
 			ac1.show_account();
 			cout << endl;
 			ac2.show_account();
-			cout << "\n\nEnter The Details of the new shared account:" << endl;
+			cout << "\n\nEnter The Details of the new shared account: " << endl;
 			ac1.merge(ac2);
 			int pos = (-1) * static_cast<int>(sizeof(account));
 			File.seekp(pos, ios::cur);
@@ -855,10 +894,38 @@ void LoanCalculator(int num)
 }
 
 
-
-
-
-
+void modify_discount(int n)
+{
+	int d;
+	bool found = false;
+	account ac;
+	fstream File;
+	File.open("account.dat", ios::binary | ios::in | ios::out);
+	if (!File)
+	{
+		cout << "File could not be open !! Press any Key...";
+		return;
+	}
+	while (!File.eof() && found == false)
+	{
+		File.read(reinterpret_cast<char*> (&ac), sizeof(account));
+		if (ac.retacno() == n)
+		{
+			ac.show_account();
+			cout << "\nEnter type of discuont: \n 1 - Soldier\n 2 - Student\n 3 - Veteran\n 4 - Newlywed\n 5 or defulty - Regular account\n";
+			cin >> d;
+			ac.setDiscuont(d);
+			int pos = (-1) * static_cast<int>(sizeof(account));
+			File.seekp(pos, ios::cur);
+			File.write(reinterpret_cast<char*> (&ac), sizeof(account));
+			cout << "\n\n\t Record Updated";
+			found = true;
+		}
+	}
+	File.close();
+	if (found == false)
+		cout << "\n\n Record Not Found ";
+}
 
 //***************************************************************
 //    			END OF PROJECT
