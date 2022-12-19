@@ -11,6 +11,7 @@
 #include<cctype>
 #include<iomanip>
 #include<conio.h>
+#include <ctime>
 using namespace std;
 
 //***************************************************************
@@ -19,6 +20,9 @@ using namespace std;
 
 class account
 {
+	int month, year, paid;
+	double  interest_rate, loan_amount, total_amount, monthly_amount;
+	int number_of_years;
 	int acno;
 	char name[50];
 	int deposit;
@@ -37,10 +41,20 @@ public:
 	char rettype() const;	//function to return type of account
 	void savings();  //This function will give the user an option to put into his existing bank account
 	int retursaving() const;
+	void LoanCalculator();
+	void update();
+	bool isLoanPaid();
 };    //class ends here
 
 void account::create_account()
 {
+	paid = 0;
+	month = 0;
+	year = 0;
+	interest_rate = 0;
+	total_amount = 0;
+	monthly_amount = 0;
+	number_of_years = 0;
 	cout << "\nEnter The account No. : ";
 	cin >> acno;
 	cout << "\n\nEnter The Name of The account Holder : ";
@@ -109,7 +123,7 @@ void account::draw(int x)
 
 void account::report() const
 {
-	cout << acno << setw(10) << " " << name << setw(10) << " " << type << setw(6) << deposit << setw(6) << saving << endl;
+	cout << acno << setw(10) << " " << name << setw(11) << " " << type << setw(10) << deposit << setw(8) << saving << endl;
 }
 
 int account::retacno() const
@@ -176,10 +190,74 @@ void account::savings() {
 		}
 	}
 
-	
+
 	ofstream outfile("savings.txt");
 	outfile << saving << endl;
 	outfile.close();
+}
+void account::LoanCalculator()
+{
+	cout << "\nEnter the loan amount: ";
+	cin >> loan_amount;
+	cout << endl;
+	cout << "Enter the interest rate: ";
+	cin >> interest_rate;
+	cout << endl;
+	cout << "The number of years: ";
+	cin >> number_of_years;
+	cout << endl;
+	time_t now = time(nullptr);
+
+	// Convert the time to a local time structure
+	tm* localTime = localtime(&now);
+
+	// Get the month (0-11)
+	month = localTime->tm_mon + 1;
+	year = localTime->tm_year + 1900;
+
+	total_amount = loan_amount + (loan_amount * (interest_rate / 100.00));
+	monthly_amount = total_amount / (number_of_years * 12);
+
+	cout << "Total amount to be paid: " << (int)total_amount << endl;
+	cout << "Total interest: " << loan_amount * (interest_rate / 100.00) << endl;
+	cout << "Monthly amount to be paid: " << monthly_amount << endl;
+	dep(loan_amount);
+}
+
+void account::update()
+{
+	if (total_amount != 0) {
+		// Get the current time
+		time_t now = time(nullptr);
+
+		// Convert the time to a local time structure
+		tm* localTime = localtime(&now);
+
+		// Get the month (0-11)
+		int Nmonth = localTime->tm_mon + 1;
+		int Nyear = localTime->tm_year + 1900;
+		if (paid != (Nyear - year) * 12 + Nmonth - month) {
+			draw(monthly_amount);
+			paid++;
+		}
+		if (paid == total_amount / monthly_amount) {
+			paid = 0;
+			month = 0;
+			year = 0;
+			interest_rate = 0;
+			total_amount = 0;
+			monthly_amount = 0;
+			number_of_years = 0;
+		}
+	}
+}
+
+bool account::isLoanPaid()
+{
+	update();
+	if (total_amount != 0)
+		return false;
+	return true;
 }
 
 //***************************************************************
@@ -195,6 +273,7 @@ void deposit_withdraw(int, int); // function to desposit/withdraw amount for giv
 void intro();	//introductory screen function
 void entry();
 int Access_to_savings(int); //A function that checks the account number and from there there will be an entry for a change within the savings account
+void LoanCalculator(int);
 string getpassword(const string& prompt = "Enter password> ");
 
 
@@ -315,8 +394,10 @@ int main()
 		cout << "\n\n\t[07]. MODIFY AN ACCOUNT";
 		cout << "\n\n\t[08]. Savings account";
 		cout << "\n\n\t[09]. Merge accounts";
-		cout << "\n\n\t[10]. EXIT";
-		cout << "\n\n\tSelect Your Option (1-10) ";
+		cout << "\n\n\t[10]. Take a Loan";
+		cout << "\n\n\t[11]. topaz";
+		cout << "\n\n\t[12]. EXIT";
+		cout << "\n\n\tSelect Your Option (1-12) ";
 		cin >> menu;
 		system("cls");
 		switch (menu)
@@ -360,13 +441,17 @@ int main()
 			delete_account(num2);
 			break;
 		case 10:
+			cout << "\n\n\tEnter The account No. : "; cin >> num;
+			LoanCalculator(num);
+			break;
+		case 12:
 			cout << "\n\n\tThanks for using bank record system";
 			break;
 		default:cout << "\a";
 		}
 		cin.ignore();
 		cin.get();
-	} while (menu != 10);
+	} while (menu != 12);
 	return 0;
 }
 
@@ -537,11 +622,12 @@ void display_all()
 		return;
 	}
 	cout << "\n\n\t\tACCOUNT HOLDER LIST\n\n";
-	cout << "=============================================================================\n";
-	cout << "A/c no.      NAME           Type  Balance          Savings account\n";
-	cout << "=============================================================================\n";
+	cout << "==============================================================\n";
+	cout << "A/c no.      NAME           Type  Balance  Savings account\n";
+	cout << "==============================================================\n";
 	while (inFile.read(reinterpret_cast<char*> (&ac), sizeof(account)))
 	{
+		ac.update();
 		ac.report();
 	}
 	inFile.close();
@@ -728,7 +814,45 @@ string getpassword(const string& prompt)
 
 	return result;
 }
+//***************************************************************
+//    			LOANING
+//***************************************************************
 
+void LoanCalculator(int num)
+{
+	bool found = false;
+	account ac;
+	fstream File;
+	File.open("account.dat", ios::binary | ios::in | ios::out);
+	if (!File)
+	{
+		cout << "File could not be open !! Press any Key...";
+		return;
+	}
+	while (!File.eof() && found == false)
+	{
+		File.read(reinterpret_cast<char*> (&ac), sizeof(account));
+		if (ac.retacno() == num)
+		{
+			ac.show_account();
+			if (ac.isLoanPaid()) {
+				ac.LoanCalculator();
+				cout << "\n\n\t Record Updated";
+			}
+			else {
+				cout << "\n\n\t You Have LOANING";
+			}
+			int pos = (-1) * static_cast<int>(sizeof(account));
+			File.seekp(pos, ios::cur);
+			File.write(reinterpret_cast<char*> (&ac), sizeof(account));
+
+			found = true;
+		}
+	}
+	File.close();
+	if (found == false)
+		cout << "\n\n Record Not Found ";
+}
 
 
 
