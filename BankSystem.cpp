@@ -52,7 +52,7 @@ public:
 void account::create_account()
 {
 	paid = 0;
-	int d;
+	int d; 
 	month = 0;
 	year = 0;
 	interest_rate = 0;
@@ -111,7 +111,10 @@ bool account::merge(account ac, int num1, int num2)
 	cout << "\nEnter A New Account No. : ";
 	cin >> temp;
 	if (temp == num1 || temp == num2)
+	{
+		cout << "The new account number must be different than the account numbers enterd";
 		return false;
+	}
 	acno = temp;
 	cout << "\nWrite The Account Holders Names : ";
 	cin.ignore();
@@ -478,11 +481,13 @@ int main()
 			cout << "\n\n\tEnter The first account's No.: "; cin >> num;
 			cout << "\n\n\tEnter The second account's No.: "; cin >> num2;
 			flag = merge_accounts(num, num2);
-			if (flag == true)
+			if (flag = true)
 			{
 				delete_account(num);
 				delete_account(num2);
 			}
+			else
+				cout << "Failed!";
 			break;
 		case 10:
 			cout << "\n\n\tEnter The account No. : "; cin >> num;
@@ -606,10 +611,7 @@ bool merge_accounts(int n1, int n2)
 			ac2.show_account();
 			cout << "\n\nEnter The Details of the new shared account: " << endl;
 			if (ac1.merge(ac2, n1, n2) == false)
-			{
-				cout << "the new account number must be different than the account numbers enterd";
 				break;
-			}
 			int pos = (-1) * static_cast<int>(sizeof(account));
 			File.seekp(pos, ios::cur);
 			File.write(reinterpret_cast<char*> (&ac1), sizeof(account));
