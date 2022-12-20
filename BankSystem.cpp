@@ -481,7 +481,7 @@ int main()
 			cout << "\n\n\tEnter The first account's No.: "; cin >> num;
 			cout << "\n\n\tEnter The second account's No.: "; cin >> num2;
 			flag = merge_accounts(num, num2);
-			if (flag = true)
+			if (flag == true)
 			{
 				delete_account(num);
 				delete_account(num2);
