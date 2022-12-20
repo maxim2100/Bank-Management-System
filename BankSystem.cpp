@@ -33,7 +33,7 @@ public:
 	void create_account();	//function to get data from user
 	void show_account() const;	//function to show data on screen
 	void modify();	//function to add new data
-	void merge(account ac); //function to merge a secont account with the current one
+	bool merge(account ac, int num1, int num2); //function to merge a secont account with the current one
 	void dep(int);	//function to accept amount and add to balance amount
 	void draw(int);	//function to accept amount and subtract from balance amount
 	void report() const;	//function to show data in tabular format
@@ -105,10 +105,17 @@ void account::modify()
 	cin >> saving;
 }
 
-void account::merge(account ac)
+bool account::merge(account ac, int num1, int num2)
 {
+	int temp;
 	cout << "\nEnter A New Account No. : ";
-	cin >> acno;
+	cin >> temp;
+	if (temp == num1 || temp == num2)
+	{
+		cout << "The new account number must be different than the account numbers enterd";
+		return false;
+	}
+	acno = temp;
 	cout << "\nWrite The Account Holders Names : ";
 	cin.ignore();
 	cin.getline(name, 50);
@@ -116,6 +123,7 @@ void account::merge(account ac)
 	cin >> type;
 	type = toupper(type);
 	this->deposit += ac.deposit;
+	return true;
 }
 
 void account::dep(int x)
@@ -300,7 +308,7 @@ bool account::isLoanPaid()
 void write_account();	//function to write record in binary file
 void display_sp(int);	//function to display account details given by user
 void modify_account(int);	//function to modify record of file
-void merge_accounts(int, int); // function to merge 2 accounts
+bool merge_accounts(int, int); // function to merge 2 accounts
 void delete_account(int);	//function to delete record of file
 void display_all();		//function to display all account details
 void deposit_withdraw(int, int); // function to desposit/withdraw amount for given account
@@ -414,6 +422,7 @@ void login::addUser()
 int main()
 {
 	int num, num2, menu;
+	bool flag;
 	intro();
 	entry();
 	do
@@ -471,9 +480,14 @@ int main()
 		case 9:
 			cout << "\n\n\tEnter The first account's No.: "; cin >> num;
 			cout << "\n\n\tEnter The second account's No.: "; cin >> num2;
-			merge_accounts(num, num2);
-			delete_account(num);
-			delete_account(num2);
+			flag = merge_accounts(num, num2);
+			if (flag = true)
+			{
+				delete_account(num);
+				delete_account(num2);
+			}
+			else
+				cout << "Failed!";
 			break;
 		case 10:
 			cout << "\n\n\tEnter The account No. : "; cin >> num;
@@ -578,7 +592,7 @@ void modify_account(int n)
 //    	function to merge accounts
 //****************************************************************
 
-void merge_accounts(int n1, int n2)
+bool merge_accounts(int n1, int n2)
 {
 	bool found = false;
 	account ac1, ac2;
@@ -596,7 +610,8 @@ void merge_accounts(int n1, int n2)
 			cout << endl;
 			ac2.show_account();
 			cout << "\n\nEnter The Details of the new shared account: " << endl;
-			ac1.merge(ac2);
+			if (ac1.merge(ac2, n1, n2) == false)
+				break;
 			int pos = (-1) * static_cast<int>(sizeof(account));
 			File.seekp(pos, ios::cur);
 			File.write(reinterpret_cast<char*> (&ac1), sizeof(account));
@@ -610,8 +625,7 @@ void merge_accounts(int n1, int n2)
 		}
 	}
 	File.close();
-	if (found == false)
-		cout << "\n\n Records Not Found ";
+	return found;
 }
 
 //***************************************************************
